@@ -14,15 +14,15 @@ on:
       solution_exported_folder:
         description: 'folder name for staging the exported solution *do not change*'
         required: true
-        default: out/exported/CuraleafEdgeEmpMetrics/
+        default: out/exported/
       solution_folder:
         description: 'staging the unpacked solution folder before check-in *do not change*'
         required: true
-        default: out/solutions/CuraleafEdgeEmpMetrics/
+        default: out/solutions/
       solution_target_folder: 
        description: 'folder name to be created and checked in *do not change*'
        required: true
-       default: solutions/CuraleafEdgeEmpMetrics/
+       default: solutions/
 env:
 #edit your values here
   ENVIRONMENT_URL: 'https://de-powerapps-dev.crm.dynamics.com/'
@@ -45,19 +45,19 @@ jobs:
     - name: who-am-i action
       uses: microsoft/powerplatform-actions/who-am-i@v0
       with:
-        environment-url: ${{env.ENVIRONMENT_URL}}
-        app-id: ${{env.CLIENT_ID}}
-        client-secret: ${{ secrets.PowerPlatformSPN }}
-        tenant-id: ${{env.TENANT_ID}}
+        environment-url: ${{ secrets.DEV_ENVIRONMENT_URL }}
+        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
+        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AAD_TENANT_ID }}
 
 
     - name: export-solution action
       uses: microsoft/powerplatform-actions/export-solution@v0
       with:
-        environment-url: ${{env.ENVIRONMENT_URL}}
-        app-id: ${{env.CLIENT_ID}}
-        client-secret: ${{ secrets.PowerPlatformSPN }}
-        tenant-id: ${{env.TENANT_ID}}
+        environment-url: ${{ secrets.DEV_ENVIRONMENT_URL }}
+        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
+        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AAD_TENANT_ID }}
         solution-name: ${{ github.event.inputs.solution_name }}
         solution-output-file: ${{ github.event.inputs.solution_exported_folder}}/${{ github.event.inputs.solution_name }}.zip
 
