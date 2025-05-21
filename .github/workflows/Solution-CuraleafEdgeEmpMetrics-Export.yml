@@ -6,7 +6,7 @@ on:
    workflow_dispatch:      
 
 jobs:
-  Export-HelloWorldCanvasApp-Solution:
+  Export-CuraleafEdgeEmpMetrics-Solution:
     uses: ./.github/workflows/export-solution-reusable.yml
     with:
       # You can specify the solution name here
