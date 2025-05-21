@@ -61,20 +61,20 @@ jobs:
     - name: who-am-i action
       uses: microsoft/powerplatform-actions/who-am-i@v0
       with:
-        environment-url: ${{ secrets.DEV_ENVIRONMENT_URL }}
-        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
-        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
-        tenant-id: ${{ secrets.AAD_TENANT_ID }}
-        cloud: ${{ inputs.CLOUD_TYPE }}
+        environment-url: ${{ env.ENVIRONMENT_URL }}
+        app-id: ${{ env.CLIENT_ID }}
+        client-secret: ${{ env.AAD_APP_SECRET }}
+        tenant-id: ${{ env.TENANT_ID }}
+        cloud: ${{ env.CLOUD_TYPE }}
 
     - name: export-solution action
       uses: microsoft/powerplatform-actions/export-solution@v0
       with:
-        environment-url: ${{ secrets.DEV_ENVIRONMENT_URL }}
-        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
-        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
-        tenant-id: ${{ secrets.AAD_TENANT_ID }}
-        cloud: ${{ inputs.CLOUD_TYPE }}
+        environment-url: ${{ env.ENVIRONMENT_URL }}
+        app-id: ${{ env.CLIENT_ID }}
+        client-secret: ${{ env.AAD_APP_SECRET }}
+        tenant-id: ${{ env.TENANT_ID }}
+        cloud: ${{ env.CLOUD_TYPE }}
         solution-name: ${{ inputs.SOLUTION_NAME }}
         solution-output-file: ${{ inputs.SOLUTION_EXPORTS_FOLDER }}${{ inputs.SOLUTION_NAME }}.zip
 
