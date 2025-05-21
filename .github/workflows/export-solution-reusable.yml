@@ -51,7 +51,7 @@ jobs:
       CLIENT_ID: ${{ secrets.POWER_PROD_SPN_CLIENT_ID}}
       AAD_APP_SECRET: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
       TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
-      CLOUD: 'UsGov' # UsGov => GCC, UsGovHigh => GCCH, UsGovDod => DOD
+      CLOUD: ${{ inputs.CLOUD_TYPE }}
 
     steps:
     - uses: actions/checkout@v2
