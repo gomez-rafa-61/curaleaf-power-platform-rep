@@ -57,18 +57,18 @@ jobs:
       # CLOUD: ${{ inputs.CLOUD_TYPE }}
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        lfs: true
+    # - uses: actions/checkout@v2
+    #   with:
+    #     lfs: true
 
-    - name: who-am-i action
-      uses: microsoft/powerplatform-actions/who-am-i@v0
-      with:
-        environment-url: ${{ inputs.DEV_ENVIRONMENT_URL }}
-        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
-        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
-        tenant-id: ${{ secrets.AAD_TENANT_ID }}
-        cloud: ${{ inputs.CLOUD_TYPE }}
+    # - name: who-am-i action
+    #   uses: microsoft/powerplatform-actions/who-am-i@v0
+    #   with:
+    #     environment-url: ${{ inputs.DEV_ENVIRONMENT_URL }}
+    #     app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
+    #     client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
+    #     tenant-id: ${{ secrets.AAD_TENANT_ID }}
+    #     cloud: ${{ inputs.CLOUD_TYPE }}
 
     - name: export-solution action
       uses: microsoft/powerplatform-actions/export-solution@v0
