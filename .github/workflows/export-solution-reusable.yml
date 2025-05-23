@@ -42,8 +42,8 @@ on:
         description: 'Development environment url.'
         required: true    
 
-permissions:
-  contents: write
+# permissions:
+#   contents: write
   
 jobs:
   export-from-dev:
