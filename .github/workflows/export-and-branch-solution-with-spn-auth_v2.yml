@@ -41,6 +41,9 @@ jobs:
     steps:
     - name: Install Power Platform Tools
       uses: microsoft/powerplatform-actions/actions-install@v1
+      
+    - name: Checkout repository
+      uses: actions/checkout@v1        
 
     - name: Export Solution
       uses: microsoft/powerplatform-actions/export-solution@v1
@@ -67,9 +70,6 @@ jobs:
         app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
         client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
-
-    - name: Checkout repository
-      uses: actions/checkout@v3        
 
     - name: Prepare solution changes for check-in into source control
       uses: microsoft/powerplatform-actions/branch-solution@v1
