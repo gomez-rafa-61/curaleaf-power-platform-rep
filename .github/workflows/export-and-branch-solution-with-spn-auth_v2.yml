@@ -31,6 +31,8 @@ jobs:
   build:
 
     runs-on: windows-latest   # alternate runner OS is: ubuntu-latest
+    env:
+      RUNNER_DEBUG: 1
 
     steps:
     - name: Install Power Platform Tools
@@ -44,6 +46,10 @@ jobs:
         client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
         # cloud: ${{ inputs.CLOUD_TYPE }}
+
+    - uses: actions/checkout@v2
+      with:
+        lfs: true        
 
     - name: Export Solution
       uses: microsoft/powerplatform-actions/export-solution@v1
@@ -63,15 +69,15 @@ jobs:
         solution-type: 'Unmanaged'
         overwrite-files: true
 
-    - name: Publish Solution
-      uses: microsoft/powerplatform-actions/publish-solution@v1
-      with:
-        environment-url: ${{ secrets.BUILD_ENVIRONMENT_URL }}
-        app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
-        client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
-        tenant-id: ${{ secrets.AAD_TENANT_ID }}
+    # - name: Publish Solution
+    #   uses: microsoft/powerplatform-actions/publish-solution@v1
+    #   with:
+    #     environment-url: ${{ secrets.BUILD_ENVIRONMENT_URL }}
+    #     app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
+    #     client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
+    #     tenant-id: ${{ secrets.AAD_TENANT_ID }}
 
-    - uses: actions/checkout@v4
+    # - uses: actions/checkout@v4
     # - name: Create Placeholder File
     #   run: |
     #      mkdir ${{ github.event.inputs.solution_target_folder}}
@@ -87,8 +93,11 @@ jobs:
     #       git push origin main         
 
     - name: Prepare solution changes for check-in into source control
-      uses: microsoft/powerplatform-actions/branch-solution@v1
+      uses: microsoft/powerplatform-actions/branch-solution@v0
       with:
+        # solution_name: ${{ github.event.inputs.solution_name }}
         solution-folder: ${{ github.event.inputs.solution_folder}}/${{ github.event.inputs.solution_name }}
         solution-target-folder: ${{ github.event.inputs.solution_target_folder}}/${{ github.event.inputs.solution_name }}
+        # target_branch: main
+        allow-empty-commit: true
         token: ${{ secrets.GITHUB_TOKEN }}
