@@ -72,19 +72,19 @@ jobs:
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
 
     - uses: actions/checkout@v4
-    - name: Create Placeholder File
-      run: |
-         mkdir ${{ github.event.inputs.solution_target_folder}}
-         touch ${{ github.event.inputs.solution_target_folder}}/.gitkeep
+    # - name: Create Placeholder File
+    #   run: |
+    #      mkdir ${{ github.event.inputs.solution_target_folder}}
+    #      touch ${{ github.event.inputs.solution_target_folder}}/.gitkeep
 
-    - name: Stage and Commit
-      run: |
-         git add ${{ github.event.inputs.solution_target_folder}}
-         git commit -m "Create target_folder"   
+    # - name: Stage and Commit
+    #   run: |
+    #      git add ${{ github.event.inputs.solution_target_folder}}
+    #      git commit -m "Create target_folder"   
 
-    - name: Push Changes (Optional)
-      run: |
-          git push origin main         
+    # - name: Push Changes (Optional)
+    #   run: |
+    #       git push origin main         
 
     - name: Prepare solution changes for check-in into source control
       uses: microsoft/powerplatform-actions/branch-solution@v1
