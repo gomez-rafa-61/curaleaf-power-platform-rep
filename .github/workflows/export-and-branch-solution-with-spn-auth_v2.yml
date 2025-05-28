@@ -24,12 +24,6 @@ on:
        required: true
        default: solutions/
 
-env:
-#edit your values here
-  ENVIRONMENT_URL: 'https://de-powerapps-dev.crm.dynamics.com/'
-  CLIENT_ID: '5c49d56f-3625-4d75-8d23-c5bb2611dae4'
-  TENANT_ID: '24611620-a8ee-4b1a-973b-d8960883fa48'
-
 permissions:
   contents: write
   
@@ -41,9 +35,6 @@ jobs:
     steps:
     - name: Install Power Platform Tools
       uses: microsoft/powerplatform-actions/actions-install@v1
-      
-    - name: Checkout repository
-      uses: actions/checkout@v1        
 
     - name: Export Solution
       uses: microsoft/powerplatform-actions/export-solution@v1
@@ -70,6 +61,21 @@ jobs:
         app-id: ${{ secrets.POWER_PROD_SPN_CLIENT_ID }}
         client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
+
+    - uses: actions/checkout@v4
+    - name: Create Placeholder File
+      run: |
+         mkdir ${{ github.event.inputs.solution_target_folder}}
+         touch ${{ github.event.inputs.solution_target_folder}}/.gitkeep
+
+    - name: Stage and Commit
+      run: |
+         git add ${{ github.event.inputs.solution_target_folder}}
+         git commit -m "Create target_folder"   
+
+    - name: Push Changes (Optional)
+      run: |
+          git push origin main         
 
     - name: Prepare solution changes for check-in into source control
       uses: microsoft/powerplatform-actions/branch-solution@v1
