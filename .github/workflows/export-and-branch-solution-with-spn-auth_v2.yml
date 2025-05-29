@@ -22,7 +22,7 @@ on:
       solution_target_folder: 
        description: 'folder name to be created and checked in *do not change*'
        required: true
-       default: solutions
+       default: solutions/
 
 permissions:
   contents: write
