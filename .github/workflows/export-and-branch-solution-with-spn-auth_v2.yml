@@ -48,8 +48,8 @@ jobs:
         # cloud: ${{ inputs.CLOUD_TYPE }}
 
     - uses: actions/checkout@v3
-      # with:
-      #   lfs: true        
+      with:
+        lfs: true        
 
     - name: Export Solution - managed
       uses: microsoft/powerplatform-actions/export-solution@v1
