@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.25053.152" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.25053.152" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.25053.00152">
+<ImportExportXml version="9.2.25071.154" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.25071.154" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.25071.00156">
   <SolutionManifest>
     <UniqueName>CuraleafEdgeEmpMetrics</UniqueName>
     <LocalizedNames>
@@ -8,7 +8,7 @@
     <Descriptions>
       <Description description="Retail need to capture survey vendor (Edge) employee key matrices feed for integration onto the Associate dashboard. &#xA;&#xA;Metrics per employee (i.e., employee email)&#xA;Count of reviews (guessing &quot;Online Mentions&quot; highlighted in image below)&#xA;Score - this is an aggregate score (&quot;Employee Rating&quot;)&#xA;Store name if available&#xA;Will need to ingest Edge data into Snowflake and combine with the existing Associate Dashboard data table in dbt.&#xA;&#xA;#CHN-1666" languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.21</Version>
+    <Version>1.0.0.26125</Version>
     <Managed>2</Managed>
     <Publisher>
       <UniqueName>Curaleaf</UniqueName>
