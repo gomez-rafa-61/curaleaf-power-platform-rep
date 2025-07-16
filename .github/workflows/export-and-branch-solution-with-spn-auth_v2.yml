@@ -60,7 +60,7 @@ jobs:
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
         solution-name: ${{ github.event.inputs.solution_name }}
         managed: true
-        solution-output-file: ${{ github.event.inputs.solution_exported_folder}}/${{ github.event.inputs.solution_name }}_managed.zip
+        solution-output-file: ${{ github.event.inputs.solution_exported_folder}}/managed/${{ github.event.inputs.solution_name }}_managed.zip
 
     - name: Export Solution - unmanaged
       uses: microsoft/powerplatform-actions/export-solution@v1
@@ -70,13 +70,13 @@ jobs:
         client-secret: ${{ secrets.POWER_PROD_SPN_CLIENT_SECRET }}
         tenant-id: ${{ secrets.AAD_TENANT_ID }}
         solution-name: ${{ github.event.inputs.solution_name }}
-        solution-output-file: ${{ github.event.inputs.solution_exported_folder}}/${{ github.event.inputs.solution_name }}.zip        
+        solution-output-file: ${{ github.event.inputs.solution_exported_folder}}/unmanaged/${{ github.event.inputs.solution_name }}.zip        
 
     - name: Unpack Solution
       uses: microsoft/powerplatform-actions/unpack-solution@v1
       with:
-        solution-file: ${{ github.event.inputs.solution_exported_folder}}/${{ github.event.inputs.solution_name }}.zip
-        solution-folder: ${{ github.event.inputs.solution_folder}}/${{ github.event.inputs.solution_name }}
+        solution-file: ${{ github.event.inputs.solution_exported_folder}}/unmanaged/${{ github.event.inputs.solution_name }}.zip
+        solution-folder: ${{ github.event.inputs.solution_folder}}/unmanaged/${{ github.event.inputs.solution_name }}
         solution-type: 'Both'
         overwrite-files: true
 
@@ -107,8 +107,8 @@ jobs:
       uses: microsoft/powerplatform-actions/branch-solution@v1
       with:
         # solution_name: ${{ github.event.inputs.solution_name }}
-        solution-folder: ${{ github.event.inputs.solution_folder}}/${{ github.event.inputs.solution_name }}
-        solution-target-folder: ${{ github.event.inputs.solution_target_folder}}/${{ github.event.inputs.solution_name }}
+        solution-folder: ${{ github.event.inputs.solution_folder}}/unmanaged/${{ github.event.inputs.solution_name }}
+        solution-target-folder: ${{ github.event.inputs.solution_target_folder}}/src/${{ github.event.inputs.solution_name }}
         # target_branch: main
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         allow-empty-commit: true
