@@ -1,0 +1,676 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cura_sharedoffice365_a9d88"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_azureblob": {
+        "api": {
+          "name": "shared_azureblob"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cura_sharedazureblob_b8a79"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_snowflakepa": {
+        "api": {
+          "name": "shared_snowflakepa"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cura_sharedsnowflakepa_5209f"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "envEmailDistribution (cura_envEmailDistribution)": {
+          "defaultValue": "rafael.gomez@curaleaf.com",
+          "type": "String",
+          "metadata": {
+            "schemaName": "cura_envEmailDistribution"
+          }
+        },
+        "envVar (cura_envVar)": {
+          "defaultValue": "DEV",
+          "type": "String",
+          "metadata": {
+            "schemaName": "cura_envVar"
+          }
+        }
+      },
+      "triggers": {
+        "When_a_new_email_arrives_from_Edge": {
+          "type": "OpenApiConnectionNotification",
+          "description": "Wait till email containing \"Employee Rating and Reviews from Edge\" hits the outlook box.",
+          "inputs": {
+            "parameters": {
+              "includeAttachments": true,
+              "subjectFilter": "Employee Rating and Reviews from Edge",
+              "importance": "Any",
+              "fetchOnlyWithAttachment": true,
+              "folderPath": "Inbox"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "OnNewEmailV3",
+              "connectionName": "shared_office365"
+            }
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
+        }
+      },
+      "actions": {
+        "Snowflake_Instance": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrInstance",
+                "type": "string",
+                "value": "zb45354.east-us-2.azure.snowflakecomputing.com"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Environment": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrEnvironment",
+                "type": "string",
+                "value": "@parameters('envVar (cura_envVar)')"
+              }
+            ]
+          },
+          "runAfter": {
+            "Snowflake_Instance": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Database": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrDatabase",
+                "type": "string",
+                "value": "@concat(variables('varStrEnvironment'),'_POWERAPPS')"
+              }
+            ]
+          },
+          "runAfter": {
+            "Environment": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Schema": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrSchema",
+                "type": "string",
+                "value": "EDGE_EMP_MATRICES"
+              }
+            ]
+          },
+          "runAfter": {
+            "Database": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Target_Table": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrTable",
+                "type": "string",
+                "value": "translog"
+              }
+            ]
+          },
+          "runAfter": {
+            "Schema": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Warehouse": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrWarehouse",
+                "type": "string",
+                "value": "@concat('WH_POWERAPP_',variables('varStrEnvironment'))"
+              }
+            ]
+          },
+          "runAfter": {
+            "Target_Table": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Role": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrRole",
+                "type": "string",
+                "value": "POWERAPP_ROLE"
+              }
+            ]
+          },
+          "runAfter": {
+            "Warehouse": [
+              "Succeeded"
+            ]
+          }
+        },
+        "For_each": {
+          "type": "Foreach",
+          "foreach": "@triggerOutputs()?['body/attachments']",
+          "actions": {
+            "Condition": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@item()?['contentType']",
+                      "text/csv"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Compose_Date": {
+                  "type": "Compose",
+                  "inputs": "@formatDateTime(split(triggerOutputs()?['body/subject'],' ')[6],'MM-dd-yyyy')"
+                },
+                "Compose_Month": {
+                  "type": "Compose",
+                  "inputs": "@split(outputs('Compose_Date'),'-')[0]",
+                  "runAfter": {
+                    "Compose_Date": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Compose_blob-filename": {
+                  "type": "Compose",
+                  "inputs": "@concat('edge-emp-matrics-',outputs('Compose_Date'),'.csv')",
+                  "runAfter": {
+                    "Compose_Month": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Set_File_Name": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "varStrFileName",
+                    "value": "@outputs('Compose_blob-filename')"
+                  },
+                  "runAfter": {
+                    "Save_to_Snowflake": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Set_File_Date": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "varStrFileDate",
+                    "value": "@outputs('Compose_Date')"
+                  },
+                  "runAfter": {
+                    "Set_File_Name": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Prep_Edge_File": {
+                  "type": "Scope",
+                  "actions": {
+                    "Save_Attachment_to_Blob": {
+                      "type": "Scope",
+                      "actions": {
+                        "Save_Edge_File_onto_BLOB": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "AccountNameFromSettings",
+                              "folderPath": "/edge-emp-metrics",
+                              "name": "edge-emp-matrics.csv",
+                              "body": "@item()?['contentBytes']"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+                              "operationId": "CreateFile_V2",
+                              "connectionName": "shared_azureblob"
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "contentTransfer": {
+                              "transferMode": "Chunked"
+                            }
+                          }
+                        },
+                        "Archive_Edge_File": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "AccountNameFromSettings",
+                              "folderPath": "/edge-emp-metrics/archive",
+                              "name": "@outputs('Compose_blob-filename')",
+                              "body": "@item()?['contentBytes']"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+                              "operationId": "CreateFile_V2",
+                              "connectionName": "shared_azureblob"
+                            }
+                          },
+                          "runAfter": {
+                            "Save_Edge_File_onto_BLOB": [
+                              "Succeeded"
+                            ]
+                          },
+                          "runtimeConfiguration": {
+                            "contentTransfer": {
+                              "transferMode": "Chunked"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Register_onto_Snowflake": {
+                      "type": "Scope",
+                      "actions": {
+                        "Register_Edge_Dataset": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "Instance": "@variables('varStrInstance')",
+                              "async": false,
+                              "nullable": false,
+                              "body/timeout": 60,
+                              "body/parameters/multi_statement_count": 1,
+                              "body/statement": "INSERT INTO @{variables('varStrTable')}\n(FILE_NAME, \nDATA_DATE,\nDATA_WEEK_DATE, \nDATA_MONTH)\n  values('@{outputs('Compose_blob-filename')}','@{outputs('Compose_Date')}','@{outputs('Compose_Date')}','@{outputs('Compose_Month')}');",
+                              "body/database": "@variables('varStrDatabase')",
+                              "body/schema": "@variables('varStrSchema')",
+                              "body/warehouse": "@variables('varStrWarehouse')",
+                              "body/role": "@variables('varStrRole')"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_snowflakepa",
+                              "operationId": "ExecuteSqlStatement",
+                              "connectionName": "shared_snowflakepa"
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "staticResult": {
+                              "staticResultOptions": "Disabled",
+                              "name": "Submit_SQL_Statement_for_Execution0"
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "c4498c19-742b-4753-b0f2-14e5e99416bb"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Save_Attachment_to_Blob": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Compose_blob-filename": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Save_to_Snowflake": {
+                  "type": "Scope",
+                  "actions": {
+                    "Try": {
+                      "type": "Scope",
+                      "actions": {
+                        "SQL_-_Execute_Task": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "Instance": "@variables('varStrInstance')",
+                              "async": false,
+                              "nullable": false,
+                              "body/timeout": 120,
+                              "body/parameters/multi_statement_count": 1,
+                              "body/statement": "execute task TASK_employee_matrices_rating;",
+                              "body/database": "@variables('varStrDatabase')",
+                              "body/schema": "@variables('varStrSchema')",
+                              "body/warehouse": "@variables('varStrWarehouse')",
+                              "body/role": "@variables('varStrRole')"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_snowflakepa",
+                              "operationId": "ExecuteSqlStatement",
+                              "connectionName": "shared_snowflakepa"
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "staticResult": {
+                              "staticResultOptions": "Disabled",
+                              "name": "Submit_SQL_Statement_for_Execution0"
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "c4498c19-742b-4753-b0f2-14e5e99416bb"
+                          }
+                        }
+                      }
+                    },
+                    "Catch": {
+                      "type": "Scope",
+                      "actions": {
+                        "Set_TRX_Log_-_Failed": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "Instance": "@variables('varStrInstance')",
+                              "async": false,
+                              "nullable": false,
+                              "body/timeout": 60,
+                              "body/parameters/multi_statement_count": 1,
+                              "body/statement": "INSERT INTO\n  @{variables('varStrDatabase')}.@{variables('varStrSchema')}.POWERAPPS_TRX_LOG (\n    TRX_DATE,\n    JOB,\n    STATUS,\n    MG_CODE,\n    MESSAGE,\n    TRX_TIMESTAMP\n  )\nVALUES\n  (\n    current_date(),\n    '@{parameters('envVar (cura_envVar)')}-Ins_Edge_Emp_Blob2SF',\n    'Failed',\n    '-',\n    '0) Execution of TASK failed',\n    current_timestamp()\n  );",
+                              "body/database": "@variables('varStrDatabase')",
+                              "body/schema": "@variables('varStrSchema')",
+                              "body/warehouse": "@variables('varStrWarehouse')",
+                              "body/role": "@variables('varStrRole')"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_snowflakepa",
+                              "operationId": "ExecuteSqlStatement",
+                              "connectionName": "shared_snowflakepa"
+                            }
+                          },
+                          "runAfter": {
+                            "Set_varStrDescription_-_Failed": [
+                              "Succeeded"
+                            ]
+                          },
+                          "runtimeConfiguration": {
+                            "staticResult": {
+                              "staticResultOptions": "Disabled",
+                              "name": "Submit_SQL_Statement_for_Execution0"
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "c4498c19-742b-4753-b0f2-14e5e99416bb"
+                          }
+                        },
+                        "Set_varStrRespond_Failed": {
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "varStrRespond",
+                            "value": "Failed"
+                          }
+                        },
+                        "Set_varStrDescription_-_Failed": {
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "varStrDescription",
+                            "value": "Error Executing Task -  @{triggerBody()?['text_1']}.@{triggerBody()?['text_2']}.TASK_employee_matrices_rating;"
+                          },
+                          "runAfter": {
+                            "Set_varStrRespond_Failed": [
+                              "Succeeded"
+                            ]
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Try": [
+                          "Failed"
+                        ]
+                      }
+                    },
+                    "Final": {
+                      "type": "Scope",
+                      "actions": {
+                        "Set_TRX_Log_-_Success": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "Instance": "@variables('varStrInstance')",
+                              "async": false,
+                              "nullable": false,
+                              "body/timeout": 60,
+                              "body/parameters/multi_statement_count": 1,
+                              "body/statement": "INSERT INTO\n    @{variables('varStrDatabase')}.@{variables('varStrSchema')}.POWERAPPS_TRX_LOG (\n    TRX_DATE,\n    JOB,\n    STATUS,\n    MG_CODE,\n    MESSAGE,\n    TRX_TIMESTAMP\n  )\nVALUES\n  (\n    current_date(),\n    '@{parameters('envVar (cura_envVar)')}-Ins_Edge_Emp_Blob2SF',\n    'Successful',\n    '-',\n    '0) Execution of TASK finished successful.',\n    current_timestamp()\n  );",
+                              "body/database": "@variables('varStrDatabase')",
+                              "body/schema": "@variables('varStrSchema')",
+                              "body/warehouse": "@variables('varStrWarehouse')",
+                              "body/role": "@variables('varStrRole')"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_snowflakepa",
+                              "operationId": "ExecuteSqlStatement",
+                              "connectionName": "shared_snowflakepa"
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "staticResult": {
+                              "staticResultOptions": "Disabled",
+                              "name": "Submit_SQL_Statement_for_Execution0"
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "c4498c19-742b-4753-b0f2-14e5e99416bb"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Catch": [
+                          "Skipped"
+                        ]
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Prep_Edge_File": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Attachment_Type": {
+                    "type": "Compose",
+                    "inputs": "@item()?['contentType']"
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Record_Count": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Mark_Edge_Email_as_Read": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "messageId": "@triggerOutputs()?['body/id']",
+              "body/isRead": true
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "MarkAsRead_V3",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {
+            "For_each": [
+              "Succeeded"
+            ]
+          }
+        },
+        "File_Date": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrFileDate",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Role": [
+              "Succeeded"
+            ]
+          }
+        },
+        "File_Name": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrFileName",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "File_Date": [
+              "Succeeded"
+            ]
+          }
+        },
+        "TaskDesc": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrTaskDesc",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "File_Name": [
+              "Succeeded"
+            ]
+          }
+        },
+        "varStrRespond": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrRespond",
+                "type": "string",
+                "value": "Success"
+              }
+            ]
+          },
+          "runAfter": {
+            "TaskDesc": [
+              "Succeeded"
+            ]
+          }
+        },
+        "varStrDescription": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrDescription",
+                "type": "string",
+                "value": "-"
+              }
+            ]
+          },
+          "runAfter": {
+            "varStrRespond": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Record_Count": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "varStrRecordCount",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          },
+          "runAfter": {
+            "varStrDescription": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Send_an_email_SUCCESS": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "emailMessage/To": "@parameters('envEmailDistribution (cura_envEmailDistribution)')",
+              "emailMessage/Subject": "@{variables('varStrEnvironment')} - Employee Rating and Reviews from Edge - Completed Successfully",
+              "emailMessage/Body": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">Edge File for Week</strong></b> - @{variables('varStrFileDate')}<br><b><strong class=\"editor-text-bold\">Edge File Name</strong></b> - @{variables('varStrFileName')}<br></p><br><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">Edge Employee Key Matrices - Job task loaded Successful onto Snowflake</strong></b></p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "SendEmailV2",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {
+            "Mark_Edge_Email_as_Read": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "description": "The flow triggers when a new email with specific subject and attachments is received. It processes CSV attachments, extracting the date and generating a filename. The data is then sent to a database and subsequently loaded into a data warehouse. Depending on the success of the loading process, a success or failure email is sent to a distribution list, detailing the file date, filename, and any error descriptions if applicable. The email is marked as read after processing. The flow ensures that only relevant emails with attachments are handled, streamlining data management and communication."
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
